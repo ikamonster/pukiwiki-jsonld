@@ -1,7 +1,7 @@
 <?php
 /*
 PukiWiki - Yet another WikiWikiWeb clone.
-jsonld.inc.php, v1.02 2020 M.Taniguchi
+jsonld.inc.php, v1.03 2020 M.Taniguchi
 License: GPL v3 or (at your option) any later version
 
 JSON-LDを出力するプラグイン。
@@ -19,9 +19,9 @@ JSON-LDを出力するプラグイン。
 なお、本プラグインを挿入できるのは1ページにつき1箇所のみです。
 */
 
-// 出力したいJSON-LD情報を選び、値を 1 にしてください。
 if (!defined('PLUGIN_JSONLD_ARTICLE'))        define('PLUGIN_JSONLD_ARTICLE',        1); // 1：Article （記事情報）を出力, 0：無効
 if (!defined('PLUGIN_JSONLD_BREADCRUMBLIST')) define('PLUGIN_JSONLD_BREADCRUMBLIST', 1); // 1：BreadcrumbList （パンくずリスト情報）を出力, 0：無効
+if (!defined('PLUGIN_JSONLD_ENCODEOPTIONS'))  define('PLUGIN_JSONLD_ENCODEOPTIONS',  (JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)); // json_encode関数のJSONエンコードオプション指定
 
 function plugin_jsonld_convert() {
 	if (!PLUGIN_JSONLD_ARTICLE && !PLUGIN_JSONLD_BREADCRUMBLIST) return '';
@@ -39,7 +39,6 @@ function plugin_jsonld_convert() {
 	$long_title = (!$isHome ? $title . ' | ' : '') . $page_title;
 	$thisPageUri = $script . (!$isHome ? '?' . str_replace('%2F', '/', urlencode($title)) : '');
 	$modifiedDate = date('Y-m-d\TH:i:sP', get_filetime($title));
-	$jsonOption = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
 
 	// Article（記事情報）生成
 	if (PLUGIN_JSONLD_ARTICLE) {
@@ -62,7 +61,7 @@ function plugin_jsonld_convert() {
 			),
 			'headline' => $long_title
 		);
-		$article = '<script type="application/ld+json">' . json_encode($article, $jsonOption) . '</script>';
+		$article = '<script type="application/ld+json">' . json_encode($article, PLUGIN_JSONLD_ENCODEOPTIONS) . '</script>';
 	} else $article = '';
 
 	// BreadcrumbList（パンくずリスト）生成
@@ -94,7 +93,7 @@ function plugin_jsonld_convert() {
 			'@type' => 'BreadcrumbList',
 			'itemListElement' => $bread
 		);
-		$bread = '<script type="application/ld+json">' . json_encode($bread, $jsonOption) . '</script>';
+		$bread = '<script type="application/ld+json">' . json_encode($bread, PLUGIN_JSONLD_ENCODEOPTIONS) . '</script>';
 	} else $bread = '';
 
 	return $article . $bread;
