@@ -1,7 +1,7 @@
 <?php
 /*
 PukiWiki - Yet another WikiWikiWeb clone.
-jsonld.inc.php, v1.03 2020 M.Taniguchi
+jsonld.inc.php, v1.04 2020 M.Taniguchi
 License: GPL v3 or (at your option) any later version
 
 JSON-LDを出力するプラグイン。
@@ -15,13 +15,14 @@ JSON-LDを出力するプラグイン。
 
 本プラグインは、MenuBar など全画面共通で表示されるページに挿入してください。
 もしくは、次のコードをスキンファイル（skin/pukiwiki.skin.php等）HTML内の</body>閉じタグ直前に挿入してください。
- <?php if (exist_plugin_convert('jsonld')) echo do_plugin_convert('jsonld'); ?>
+<?php if (exist_plugin_convert('jsonld')) echo do_plugin_convert('jsonld'); ?>
 なお、本プラグインを挿入できるのは1ページにつき1箇所のみです。
 */
 
-if (!defined('PLUGIN_JSONLD_ARTICLE'))        define('PLUGIN_JSONLD_ARTICLE',        1); // 1：Article （記事情報）を出力, 0：無効
-if (!defined('PLUGIN_JSONLD_BREADCRUMBLIST')) define('PLUGIN_JSONLD_BREADCRUMBLIST', 1); // 1：BreadcrumbList （パンくずリスト情報）を出力, 0：無効
-if (!defined('PLUGIN_JSONLD_ENCODEFLAGS'))    define('PLUGIN_JSONLD_ENCODEFLAGS',  (JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)); // json_encode関数のJSONエンコードフラグ指定
+if (!defined('PLUGIN_JSONLD_ARTICLE'))                    define('PLUGIN_JSONLD_ARTICLE',        1); // 1：Article （記事情報）を出力, 0：無効
+if (!defined('PLUGIN_JSONLD_BREADCRUMBLIST'))             define('PLUGIN_JSONLD_BREADCRUMBLIST', 1); // 1：BreadcrumbList （パンくずリスト情報）を出力, 0：無効
+if (!defined('PLUGIN_JSONLD_BREADCRUMBLIST_NOTEXISTPOS')) define('PLUGIN_JSONLD_BREADCRUMBLIST_NOTEXISTPOS', 0); // パンくずリストにおいて、ページとして存在しない階層の扱い。0：上位階層のURLを記載, 1：存在しない階層のURLをそのまま記載, 2：その階層を無視
+if (!defined('PLUGIN_JSONLD_ENCODEFLAGS'))                define('PLUGIN_JSONLD_ENCODEFLAGS',    (JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)); // json_encode関数のJSONエンコードフラグ指定
 
 function plugin_jsonld_convert() {
 	if (!PLUGIN_JSONLD_ARTICLE && !PLUGIN_JSONLD_BREADCRUMBLIST) return '';
@@ -36,12 +37,13 @@ function plugin_jsonld_convert() {
 
 	$script = get_script_uri();
 	$isHome = ($title == $defaultpage);
-	$long_title = (!$isHome ? $title . ' | ' : '') . $page_title;
-	$thisPageUri = $script . (!$isHome ? '?' . str_replace('%2F', '/', urlencode($title)) : '');
-	$modifiedDate = date('Y-m-d\TH:i:sP', get_filetime($title));
 
 	// Article（記事情報）生成
 	if (PLUGIN_JSONLD_ARTICLE) {
+		$long_title = (!$isHome ? $title . ' | ' : '') . $page_title;
+		$thisPageUri = ($isHome)? $script : get_page_uri($title, PKWK_URI_ABSOLUTE);
+		$modifiedDate = date('Y-m-d\TH:i:sP', get_filetime($title));
+
 		$article = array(
 			'@context' => 'http:'.'//schema.org',
 			'@type' => 'Article',
@@ -68,6 +70,7 @@ function plugin_jsonld_convert() {
 	if (PLUGIN_JSONLD_BREADCRUMBLIST && !$isHome ) {
 		$names = explode('/', $title);
 		$path = '';
+		$item = $script;
 		$i = 0;
 
 		$bread = array();
@@ -75,16 +78,21 @@ function plugin_jsonld_convert() {
 			'@type' => 'ListItem',
 			'position' => ++$i,
 			'name' => $defaultpage,
-			'item' => $script
+			'item' => $item
 		);
 
 		foreach ($names as $name) {
-			$path .= (($path != '')? '/' : '') . urlencode($name);
+			$path .= (($path != '')? '/' : '') . $name;
+			if (PLUGIN_JSONLD_BREADCRUMBLIST_NOTEXISTPOS != 1 && !is_page($path)) {
+				if (PLUGIN_JSONLD_BREADCRUMBLIST_NOTEXISTPOS != 0) continue;
+			} else {
+				$item = get_page_uri($path, PKWK_URI_ABSOLUTE);
+			}
 			$bread[] = array(
 				'@type' => 'ListItem',
 				'position' => ++$i,
 				'name' => $name,
-				'item' => $script . '?' . $path
+				'item' => $item
 			);
 		}
 
