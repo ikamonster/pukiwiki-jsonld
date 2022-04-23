@@ -7,7 +7,7 @@ JSON-LD を出力する[PukiWiki](https://pukiwiki.osdn.jp/)用プラグイン�
 
 |対象PukiWikiバージョン|対象PHPバージョン|
 |:---:|:---:|
-|PukiWiki 1.5.3 ~ 1.5.4RC (UTF-8)|PHP 7.4 ~ 8.1|
+|PukiWiki 1.5.3 ~ 1.5.4 (UTF-8)|PHP 7.4 ~ 8.1|
 
 ## インストール
 
@@ -38,4 +38,6 @@ MenuBarなど全画面共通で表示されるページに挿入してくださ�
 |:---|:---:|:---:|:---|
 |PLUGIN_JSONLD_ARTICLE| 0 or 1| 1|1：Article （記事情報）を出力, 0：無効|
 |PLUGIN_JSONLD_BREADCRUMBLIST| 0 or 1| 1|1：BreadcrumbList （パンくずリスト情報）を出力, 0：無効|
+|PLUGIN_JSONLD_BREADCRUMBLIST_NOTEXISTPOS| 0 ~ 2| 0|パンくずリストにおいて、ページとして存在しない階層の扱い。0：上位階層のURLを記載, 1：存在しない階層のURLをそのまま記載, 2：その階層を無視|
+|PLUGIN_JSONLD_ENCODEFLAGS| ビットフラグ| (JSON_UNESCAPED_UNICODE \| JSON_UNESCAPED_SLASHES \| JSON_HEX_TAG \| JSON_HEX_AMP \| JSON_HEX_APOS \| JSON_HEX_QUOT)|json_encode関数のJSONエンコードフラグ指定|
 
